@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHOP LEADER BD - সুরক্ষিত এডমিন প্যানেল</title>
+    <style>
+        :root {
+            --primary: #f85606;
+            --primary-dark: #d94804;
+            --success: #00ab6b;
+            --danger: #ff4d4f;
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-main: #2c3e50;
+            --text-muted: #7f8c8d;
+            --border-color: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 20px; min-height: 100vh; position: relative; overflow-x: hidden; }
+
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10002;
+            animation: fall linear infinite;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-10px) translateX(0); opacity: 1; }
+            100% { transform: translateY(105vh) translateX(50px); opacity: 0.2; }
+        }
+
+        .login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10000; padding: 15px;
+        }
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px; border-radius: 16px; width: 100%; max-width: 400px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4); text-align: center;
+            backdrop-filter: blur(10px); position: relative; z-index: 10003;
+        }
+        .login-card h3 { color: var(--primary); margin-bottom: 20px; font-size: 20px; }
+
+        .admin-wrapper { max-width: 900px; margin: 0 auto; display: none; }
+        .admin-wrapper.active { display: block; }
+
+        .admin-header { background: linear-gradient(135deg, #f85606, #ff7e33); color: white; padding: 25px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(248, 86, 6, 0.2); }
+        .admin-header h2 { font-size: 20px; font-weight: 700; }
+        .logout-btn-top { background: rgba(0,0,0,0.2); color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; transition: background 0.2s; }
+        .logout-btn-top:hover { background: rgba(0,0,0,0.4); }
+
+        .card { background: var(--card-bg); padding: 22px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid var(--border-color); margin-bottom: 20px; }
+        .card-title { font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 18px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #fdf2ed; padding-bottom: 10px; }
+        
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px; color: #4a5568; }
+        .form-group input, .form-group textarea { width: 100%; padding: 11px 14px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; background: #fafbfc; transition: all 0.3s ease; }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--primary); outline: none; background: #fff; box-shadow: 0 0 0 3px rgba(248,86,6,0.1); }
+        
+        .checkbox-group { display: flex; gap: 20px; margin-top: 10px; font-size: 13px; }
+        .checkbox-group label { font-weight: 500; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; color: #4a5568; }
+        .checkbox-group input { width: 16px; height: 16px; accent-color: var(--primary); }
+
+        .btn { background: var(--primary); color: white; border: none; padding: 12px 20px; font-weight: 700; border-radius: 8px; cursor: pointer; font-size: 14px; width: 100%; transition: background 0.3s; }
+        .btn:hover { background: var(--primary-dark); }
+        .btn-secondary { background: #64748b; }
+        .btn-secondary:hover { background: #475569; }
+
+        .order-portal-btn { background: linear-gradient(135deg, #1e293b, #0f172a); color: white; border: none; padding: 20px; border-radius: 12px; font-size: 16px; font-weight: 700; width: 100%; cursor: pointer; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.2s; }
+        .order-portal-btn:hover { transform: translateY(-2px); }
+        .order-counter-badge { background: var(--primary); color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
+        .modal-overlay.active { display: flex; }
+        
+        .modal-container { background: #fff; width: 100%; max-width: 800px; max-height: 90vh; border-radius: 16px; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden; animation: modalPop 0.3s ease; }
+        @keyframes modalPop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .modal-header { background: #f8fafc; padding: 18px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 18px; font-weight: 700; color: var(--text-main); }
+        .modal-close-btn { background: #fee2e2; color: var(--danger); border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .modal-close-btn:hover { background: var(--danger); color: white; }
+
+        .modal-body { padding: 20px; overflow-y: auto; flex: 1; background: #f8fafc; }
+
+        .tab-container { display: flex; gap: 8px; margin-bottom: 20px; background: #e2e8f0; padding: 6px; border-radius: 10px; }
+        .tab-btn { flex: 1; padding: 10px; text-align: center; border: none; background: transparent; font-weight: 600; font-size: 13px; border-radius: 8px; cursor: pointer; color: var(--text-muted); transition: all 0.3s; }
+        .tab-btn.active { background: #fff; color: var(--primary); box-shadow: 0 2px 6px rgba(0,0,0,0.06); font-weight: 700; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .order-card { background: #fff; border: 1px solid var(--border-color); padding: 16px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border-left: 5px solid var(--primary); text-align: left; }
+        .order-card.accepted { border-left-color: var(--success); }
+        .order-card.rejected { border-left-color: var(--danger); }
+        
+        .order-header-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; color: var(--text-muted); }
+        .order-body-info { font-size: 14px; margin-bottom: 6px; line-height: 1.5; }
+        .order-items-box { background: #f8fafc; padding: 10px; border-radius: 6px; margin: 8px 0; font-size: 13px; border: 1px solid #e2e8f0; }
+        
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .badge-pending { background: #fef3c7; color: #b45309; }
+        .badge-accepted { background: #d1fae5; color: #065f46; }
+        .badge-rejected { background: #fee2e2; color: #991b1b; }
+
+        .action-buttons { display: flex; gap: 8px; margin-top: 12px; }
+        .btn-action { padding: 8px 14px; border-radius: 6px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; color: white; transition: opacity 0.2s; }
+        .btn-action:hover { opacity: 0.9; }
+        .bg-success { background: var(--success); }
+        .bg-danger { background: var(--danger); }
+        .bg-secondary { background: #64748b; }
+        .bg-primary { background: var(--primary); }
+
+        .prod-list-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding: 12px 0; font-size: 14px; gap: 10px; text-align: left; }
+        .prod-list-item:last-child { border-bottom: none; }
+        
+        .search-box { margin-bottom: 15px; }
+        .search-box input { width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; background: #fafbfc; }
+    </style>
+</head>
+<body>
+
+    <audio id="bgMusic" src="https://files.catbox.moe/2ho80j.mp3" loop></audio>
+
+    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 10005;">
+        <button id="musicToggleBtn" onclick="toggleBackgroundMusic()" style="background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 13px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 8px;">
+            🎵 গান বন্ধ করুন
+        </button>
+    </div>
+
+    <div class="login-overlay" id="adminLoginModal">
+        <div class="login-card">
+            <h3>🔒 এডমিন সিকিউর লগইন</h3>
+            <form onsubmit="handleAdminLogin(event)">
+                <div class="form-group">
+                    <label>ইউজারনেম:</label>
+                    <input type="text" id="loginUser" required placeholder="ইউজারনেম দিন">
+                </div>
+                <div class="form-group">
+                    <label>পাসওয়ার্ড:</label>
+                    <input type="password" id="loginPass" required placeholder="পাসওয়ার্ড দিন">
+                </div>
+                <!-- পাসওয়ার্ড সেভ করার জন্য টিক মার্ক অপশন যুক্ত করা হয়েছে -->
+                <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
+                    <input type="checkbox" id="rememberMeCheck" style="width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer;">
+                    <label for="rememberMeCheck" style="margin-bottom: 0; cursor: pointer; font-size: 13px; color: var(--text-main);">পাসওয়ার্ড সেভ করে রাখুন</label>
+                </div>
+                <button type="submit" class="btn">লগইন করুন</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="admin-wrapper" id="adminDashboardContent">
+        <div class="admin-header">
+            <h2>🛠️ SHOP LEADER BD প্রফেশনাল ম্যানেজমেন্ট ড্যাশবোর্ড</h2>
+            <button class="logout-btn-top" onclick="adminLogout()">লগআউট</button>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <button class="order-portal-btn" onclick="openOrderModal()">
+                <span>📦 কাস্টমার অর্ডার কন্ট্রোল সেন্টার খুলুন</span>
+                <span class="order-counter-badge" id="totalOrderBadge">০টি অর্ডার</span>
+            </button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">🖼️ হোমপেজ স্লাইডার ইমেজ ম্যানেজমেন্ট</div>
+            <form onsubmit="handleSliderSubmit(event)">
+                <div class="form-group">
+                    <label>স্লাইডার ইমেজ ১ (লিংক):</label>
+                    <input type="url" id="sliderImg1" placeholder="https://..." required>
+                </div>
+                <div class="form-group">
+                    <label>স্লাইডার ইমেজ ২ (লিংক):</label>
+                    <input type="url" id="sliderImg2" placeholder="https://..." required>
+                </div>
+                <div class="form-group">
+                    <label>স্লাইডার ইমেজ ৩ (লিংক):</label>
+                    <input type="url" id="sliderImg3" placeholder="https://..." required>
+                </div>
+                <button type="submit" class="btn">স্লাইডার আপডেট করুন</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-title">⚙️ পেমেন্ট ও গ্লোবাল সেটিংস</div>
+            <div class="form-group">
+                <label>বিকাশ পার্সোনাল/মার্চেন্ট নম্বর:</label>
+                <input type="text" id="adminBkashInput" placeholder="যেমন: 01712345678" onchange="saveAdminBkash(this.value)">
+            </div>
+            <div class="form-group" style="margin-top: 10px;">
+                <label>ডিফল্ট ডেলিভারি চার্জ (৳):</label>
+                <input type="number" id="adminGlobalDeliveryInput" placeholder="যেমন: 60" onchange="saveAdminGlobalDelivery(this.value)">
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">🔑 এডমিন পাসওয়ার্ড পরিবর্তন</div>
+            <form onsubmit="changeAdminPassword(event)">
+                <div class="form-group">
+                    <label>বর্তমান পাসওয়ার্ড:</label>
+                    <input type="password" id="currPass" required placeholder="পুরনো পাসওয়ার্ড">
+                </div>
+                <div class="form-group">
+                    <label>নতুন পাসওয়ার্ড:</label>
+                    <input type="password" id="newPass" required placeholder="নতুন পাসওয়ার্ড">
+                </div>
+                <button type="submit" class="btn btn-secondary">পাসওয়ার্ড আপডেট করুন</button>
+            </form>
+        </div>
+
+        <div class="card" id="productFormCard">
+            <div class="card-title" id="formTitleText">➕ নতুন পণ্য ও ডেলিভারি চার্জ যোগ করুন</div>
+            <form id="addProductForm" onsubmit="handleProductSubmit(event)">
+                <input type="hidden" id="editProductId">
+                <div class="form-group"><label>পণ্যের নাম:</label><input type="text" id="pName" required></div>
+                <div class="form-group"><label>বর্তমান মূল্য (৳):</label><input type="number" id="pPrice" required></div>
+                <div class="form-group"><label>পুরনো মূল্য (৳):</label><input type="number" id="pOldPrice"></div>
+                <div class="form-group"><label>ডিসকাউন্ট (যেমন: 80%):</label><input type="text" id="pDiscount"></div>
+                <div class="form-group"><label>এই পণ্যের জন্য ডেলিভারি চার্জ (৳):</label><input type="number" id="pDeliveryCharge" placeholder="যেমন: ৬০ বা ৮০" required></div>
+                
+                <div class="form-group"><label>১ম ছবির লিংক (Main Image):</label><input type="url" id="pImg1" required placeholder="https://..."></div>
+                <div class="form-group"><label>২য় ছবির লিংক (Thumbnail 1):</label><input type="url" id="pImg2" placeholder="https://..."></div>
+                <div class="form-group"><label>৩য় ছবির লিংক (Thumbnail 2):</label><input type="url" id="pImg3" placeholder="https://..."></div>
+
+                <div class="form-group">
+                    <label>পেমেন্ট পদ্ধতি সিলেক্ট করুন:</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" id="payCod" checked> ক্যাশ অন ডেলিভারি</label>
+                        <label><input type="checkbox" id="payBkash"> বিকাশ (bKash)</label>
+                    </div>
+                </div>
+
+                <div class="form-group"><label>পণ্যের বিবরণ:</label><textarea id="pDesc" rows="2"></textarea></div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn" id="submitBtnText">পণ্য প্রকাশ করুন</button>
+                    <button type="button" class="btn btn-secondary" id="cancelEditBtn" style="display: none;" onclick="resetProductForm()">বাতিল করুন</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📦 পণ্যের তালিকা</div>
+            <div class="search-box">
+                <input type="text" id="productSearchInput" placeholder="🔍 পণ্যের নাম দিয়ে সার্চ করুন..." onkeyup="filterAdminProducts()">
+            </div>
+            <div id="adminProductList"><p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 15px;">লোড হচ্ছে...</p></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="orderModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div class="modal-title">⚡ কাস্টমার অর্ডার কন্ট্রোল সেন্টার</div>
+                <button class="modal-close-btn" onclick="closeOrderModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="tab-container">
+                    <button class="tab-btn active" onclick="switchOrderTab('pending', this)">⏳ পেন্ডিং (<span id="pendingCount">0</span>)</button>
+                    <button class="tab-btn" onclick="switchOrderTab('accepted', this)">✅ এক্সেপ্টেড (<span id="acceptedCount">0</span>)</button>
+                    <button class="tab-btn" onclick="switchOrderTab('rejected', this)">❌ বাতিল (<span id="rejectedCount">0</span>)</button>
+                </div>
+
+                <div id="tabPending" class="tab-content active">
+                    <div id="adminPendingOrdersList"><p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px;">কোনো পেন্ডিং অর্ডার নেই...</p></div>
+                </div>
+
+                <div id="tabAccepted" class="tab-content">
+                    <div id="adminAcceptedOrdersList"><p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px;">কোনো এক্সেপ্ট করা অর্ডার নেই...</p></div>
+                </div>
+
+                <div id="tabRejected" class="tab-content">
+                    <div id="adminRejectedOrdersList"><p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px;">কোনো বাতিল অর্ডার নেই...</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function playBackgroundMusic() {
+            const music = document.getElementById('bgMusic');
+            const btn = document.getElementById('musicToggleBtn');
+            music.volume = 0.5;
+            music.play().then(() => {
+                btn.innerHTML = "🎵 গান বন্ধ করুন";
+                sessionStorage.setItem('music_playing', 'true');
+            }).catch(() => {
+                btn.innerHTML = "🎶 গান চালু করুন";
+                sessionStorage.setItem('music_playing', 'false');
+            });
+        }
+
+        window.toggleBackgroundMusic = function() {
+            const music = document.getElementById('bgMusic');
+            const btn = document.getElementById('musicToggleBtn');
+            if (music.paused) {
+                music.play();
+                btn.innerHTML = "🎵 গান বন্ধ করুন";
+                sessionStorage.setItem('music_playing', 'true');
+            } else {
+                music.pause();
+                btn.innerHTML = "🎶 গান চালু করুন";
+                sessionStorage.setItem('music_playing', 'false');
+            }
+        };
+
+        document.addEventListener('click', function() {
+            const music = document.getElementById('bgMusic');
+            if (music.paused && sessionStorage.getItem('music_playing') !== 'false') {
+                music.play().then(() => {
+                    document.getElementById('musicToggleBtn').innerHTML = "🎵 গান বন্ধ করুন";
+                    sessionStorage.setItem('music_playing', 'true');
+                }).catch(() => {});
+            }
+        }, { once: true });
+
+        window.addEventListener('DOMContentLoaded', () => { playBackgroundMusic(); });
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, push, set, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCr_xc3phISD4A3aWARxm9C7cWc9Skx--E",
+            authDomain: "radiatul-b90ae.firebaseapp.com",
+            projectId: "radiatul-b90ae",
+            storageBucket: "radiatul-b90ae.firebasestorage.app",
+            messagingSenderId: "509736303321",
+            appId: "1:509736303321:web:719e78eb47ca0c6d989cc8",
+            measurementId: "G-KYF07PZ5VT",
+            databaseURL: "https://radiatul-b90ae-default-rtdb.firebaseio.com/"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let allProductsCache = {};
+
+        function createSnowfall() {
+            for (let i = 0; i < 45; i++) {
+                let snow = document.createElement('div');
+                snow.classList.add('snowflake');
+                snow.style.left = Math.random() * 100 + 'vw';
+                snow.style.width = snow.style.height = (Math.random() * 6 + 3) + 'px';
+                snow.style.animationDuration = (Math.random() * 5 + 3) + 's';
+                snow.style.animationDelay = (Math.random() * 5) + 's';
+                document.body.appendChild(snow);
+            }
+        }
+
+        window.onload = function() {
+            createSnowfall();
+            
+            // ব্রাউজারে সেভ করা ইউজারনেম এবং পাসওয়ার্ড থাকলে অটো ফিল করা
+            let savedUser = localStorage.getItem('shop_leader_saved_user');
+            let savedPass = localStorage.getItem('shop_leader_saved_pass');
+            if (savedUser && savedPass) {
+                document.getElementById('loginUser').value = savedUser;
+                document.getElementById('loginPass').value = savedPass;
+                document.getElementById('rememberMeCheck').checked = true;
+            }
+
+            let isAuth = sessionStorage.getItem('shop_leader_admin_auth');
+            if (isAuth === 'true') {
+                document.getElementById('adminLoginModal').style.display = 'none';
+                document.getElementById('adminDashboardContent').classList.add('active');
+                initAdminPanel();
+            }
+        };
+
+        window.handleAdminLogin = async function(event) {
+            event.preventDefault();
+            let uInput = document.getElementById('loginUser').value.trim();
+            let pInput = document.getElementById('loginPass').value.trim();
+            let rememberMe = document.getElementById('rememberMeCheck').checked;
+
+            const adminRef = ref(db, 'settings/adminCredentials');
+            let snapshot = await get(adminRef);
+
+            let correctUser = "admin";
+            let correctPass = "123456";
+
+            if (snapshot.exists()) {
+                let creds = snapshot.val();
+                correctUser = creds.username || "admin";
+                correctPass = creds.password || "123456";
+            }
+
+            if (uInput === correctUser && pInput === correctPass) {
+                sessionStorage.setItem('shop_leader_admin_auth', 'true');
+
+                // টিক মার্ক দেওয়া থাকলে লোকাল স্টোরেজে ইউজারনেম ও পাসওয়ার্ড সেভ হবে, না থাকলে মুছে যাবে
+                if (rememberMe) {
+                    localStorage.setItem('shop_leader_saved_user', uInput);
+                    localStorage.setItem('shop_leader_saved_pass', pInput);
+                } else {
+                    localStorage.removeItem('shop_leader_saved_user');
+                    localStorage.removeItem('shop_leader_saved_pass');
+                }
+
+                document.getElementById('adminLoginModal').style.display = 'none';
+                document.getElementById('adminDashboardContent').classList.add('active');
+                initAdminPanel();
+            } else {
+                alert("ইউজারনেম অথবা পাসওয়ার্ড ভুল হয়েছে!");
+            }
+        };
+
+        window.adminLogout = function() {
+            sessionStorage.removeItem('shop_leader_admin_auth');
+            location.reload();
+        };
+
+        window.changeAdminPassword = async function(event) {
+            event.preventDefault();
+            let currPassInput = document.getElementById('currPass').value.trim();
+            let newPassInput = document.getElementById('newPass').value.trim();
+
+            if(newPassInput.length < 4) return alert("নতুন পাসওয়ার্ড কমপক্ষে ৪ অক্ষরের হতে হবে!");
+
+            const adminRef = ref(db, 'settings/adminCredentials');
+            let snapshot = await get(adminRef);
+            let correctPass = "123456";
+            let correctUser = "admin";
+
+            if (snapshot.exists()) {
+                let creds = snapshot.val();
+                correctPass = creds.password || "123456";
+                correctUser = creds.username || "admin";
+            }
+
+            if(currPassInput !== correctPass) return alert("বর্তমান পাসওয়ার্ড সঠিক নয়!");
+
+            set(ref(db, 'settings/adminCredentials'), { username: correctUser, password: newPassInput }).then(() => {
+                alert("এডমিন পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে!");
+                document.getElementById('currPass').value = "";
+                document.getElementById('newPass').value = "";
+            }).catch(err => alert("ত্রুটি: " + err.message));
+        };
+
+        function initAdminPanel() {
+            fetchAdminProducts();
+            fetchAdminOrders();
+            loadAdminSettings();
+        }
+
+        window.openOrderModal = function() { document.getElementById('orderModal').classList.add('active'); };
+        window.closeOrderModal = function() { document.getElementById('orderModal').classList.remove('active'); };
+
+        window.switchOrderTab = function(tabName, element) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+            if(tabName === 'pending') document.getElementById('tabPending').classList.add('active');
+            else if(tabName === 'accepted') document.getElementById('tabAccepted').classList.add('active');
+            else if(tabName === 'rejected') document.getElementById('tabRejected').classList.add('active');
+            element.classList.add('active');
+        };
+
+        function loadAdminSettings() {
+            const bkashRef = ref(db, 'settings/bkashNumber');
+            get(bkashRef).then((snapshot) => {
+                if (snapshot.exists()) document.getElementById('adminBkashInput').value = snapshot.val();
+            });
+
+            const deliveryRef = ref(db, 'settings/deliveryCharge');
+            get(deliveryRef).then((snapshot) => {
+                if (snapshot.exists()) document.getElementById('adminGlobalDeliveryInput').value = snapshot.val();
+            });
+
+            const sliderRef = ref(db, 'settings/sliders');
+            get(sliderRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    let sliders = snapshot.val();
+                    if(sliders[0]) document.getElementById('sliderImg1').value = sliders[0];
+                    if(sliders[1]) document.getElementById('sliderImg2').value = sliders[1];
+                    if(sliders[2]) document.getElementById('sliderImg3').value = sliders[2];
+                }
+            });
+        }
+
+        window.saveAdminBkash = function(number) {
+            set(ref(db, 'settings/bkashNumber'), number).then(() => alert("বিকাশ নম্বর আপডেট হয়েছে!"));
+        };
+
+        window.saveAdminGlobalDelivery = function(charge) {
+            set(ref(db, 'settings/deliveryCharge'), Number(charge) || 0).then(() => alert("ডেলিভারি চার্জ আপডেট হয়েছে!"));
+        };
+
+        window.handleSliderSubmit = function(event) {
+            event.preventDefault();
+            let s1 = document.getElementById('sliderImg1').value.trim();
+            let s2 = document.getElementById('sliderImg2').value.trim();
+            let s3 = document.getElementById('sliderImg3').value.trim();
+            set(ref(db, 'settings/sliders'), [s1, s2, s3]).then(() => {
+                alert("স্লাইডার সফলভাবে আপডেট করা হয়েছে!");
+            }).catch(err => alert("ত্রুটি: " + err.message));
+        };
+
+        window.handleProductSubmit = function(event) {
+            event.preventDefault();
+            let editId = document.getElementById('editProductId').value;
+            let img1 = document.getElementById('pImg1').value.trim();
+            let img2 = document.getElementById('pImg2').value.trim();
+            let img3 = document.getElementById('pImg3').value.trim();
+            let imagesArray = [img1, img2, img3].filter(img => img !== "");
+
+            let prodData = {
+                title: document.getElementById('pName').value || "নামবিহীন পণ্য",
+                price: Number(document.getElementById('pPrice').value) || 0,
+                oldPrice: Number(document.getElementById('pOldPrice').value) || 0,
+                discount: document.getElementById('pDiscount').value || "",
+                deliveryCharge: Number(document.getElementById('pDeliveryCharge').value) || 60,
+                images: imagesArray.length > 0 ? imagesArray : ["https://i.imgur.com/G368AJx.png"],
+                allowCod: document.getElementById('payCod').checked,
+                allowBkash: document.getElementById('payBkash').checked,
+                desc: document.getElementById('pDesc').value || ""
+            };
+
+            if (editId) {
+                update(ref(db, 'products/' + editId), prodData).then(() => {
+                    alert("পণ্য সফলভাবে আপডেট করা হয়েছে!");
+                    resetProductForm();
+                }).catch(err => alert("ত্রুটি: " + err.message));
+            } else {
+                set(push(ref(db, 'products')), prodData).then(() => {
+                    alert("পণ্য সফলভাবে যুক্ত হয়েছে!");
+                    resetProductForm();
+                }).catch(err => alert("ত্রুটি: " + err.message));
+            }
+        };
+
+        function fetchAdminProducts() {
+            onValue(ref(db, 'products'), (snapshot) => {
+                allProductsCache = snapshot.val() || {};
+                renderProductList(allProductsCache);
+            });
+        }
+
+        function renderProductList(data) {
+            const container = document.getElementById('adminProductList');
+            container.innerHTML = "";
+            if (!data || Object.keys(data).length === 0) {
+                container.innerHTML = "<p style='font-size:13px; color:var(--text-muted); text-align:center;'>কোনো পণ্য পাওয়া যায়নি।</p>";
+                return;
+            }
+
+            for (let id in data) {
+                let p = data[id];
+                let methods = [];
+                if(p.allowCod) methods.push('COD');
+                if(p.allowBkash) methods.push('bKash');
+                let payText = methods.join(', ');
+
+                container.innerHTML += `
+                    <div class="prod-list-item">
+                        <span><b>${p.title}</b><br><span style="color:var(--primary); font-weight:700;">৳${p.price}</span> | ডেলিভারি: <b>৳${p.deliveryCharge}</b> <small>[${payText}]</small></span>
+                        <div style="display: flex; gap: 5px;">
+                            <button class="btn-action bg-primary" onclick="editProduct('${id}')">এডিট</button>
+                            <button class="btn-action bg-danger" onclick="deleteProduct('${id}')">ডিলিট</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        window.filterAdminProducts = function() {
+            let query = document.getElementById('productSearchInput').value.toLowerCase();
+            let filtered = {};
+            for (let id in allProductsCache) {
+                if (allProductsCache[id].title.toLowerCase().includes(query)) filtered[id] = allProductsCache[id];
+            }
+            renderProductList(filtered);
+        };
+
+        window.editProduct = function(id) {
+            let p = allProductsCache[id];
+            if(!p) return;
+            document.getElementById('editProductId').value = id;
+            document.getElementById('pName').value = p.title || "";
+            document.getElementById('pPrice').value = p.price || "";
+            document.getElementById('pOldPrice').value = p.oldPrice || "";
+            document.getElementById('pDiscount').value = p.discount || "";
+            document.getElementById('pDeliveryCharge').value = p.deliveryCharge || 60;
+            
+            let imgs = p.images || [];
+            document.getElementById('pImg1').value = imgs[0] || "";
+            document.getElementById('pImg2').value = imgs[1] || "";
+            document.getElementById('pImg3').value = imgs[2] || "";
+
+            document.getElementById('payCod').checked = p.allowCod !== undefined ? p.allowCod : true;
+            document.getElementById('payBkash').checked = p.allowBkash || false;
+            document.getElementById('pDesc').value = p.desc || "";
+
+            document.getElementById('formTitleText').innerText = "✏️ পণ্য এডিট করুন";
+            document.getElementById('submitBtnText').innerText = "আপডেট করুন";
+            document.getElementById('cancelEditBtn').style.display = "block";
+            document.getElementById('productFormCard').scrollIntoView({ behavior: 'smooth' });
+        };
+
+        window.resetProductForm = function() {
+            document.getElementById('addProductForm').reset();
+            document.getElementById('editProductId').value = "";
+            document.getElementById('formTitleText').innerText = "➕ নতুন পণ্য ও ডেলিভারি চার্জ যোগ করুন";
+            document.getElementById('submitBtnText').innerText = "পণ্য প্রকাশ করুন";
+            document.getElementById('cancelEditBtn').style.display = "none";
+            document.getElementById('payCod').checked = true;
+        };
+
+        window.deleteProduct = function(id) {
+            if(confirm("পণ্যটি ডিলিট করতে চান?")) remove(ref(db, 'products/' + id));
+        };
+
+        function fetchAdminOrders() {
+            onValue(ref(db, 'orders'), (snapshot) => {
+                const data = snapshot.val();
+                const pendingEl = document.getElementById('adminPendingOrdersList');
+                const acceptedEl = document.getElementById('adminAcceptedOrdersList');
+                const rejectedEl = document.getElementById('adminRejectedOrdersList');
+
+                pendingEl.innerHTML = "";
+                acceptedEl.innerHTML = "";
+                rejectedEl.innerHTML = "";
+
+                let pCount = 0, aCount = 0, rCount = 0;
+
+                if (!data) {
+                    pendingEl.innerHTML = "<p style='font-size:13px; color:var(--text-muted); text-align:center;'>কোনো পেন্ডিং অর্ডার নেই।</p>";
+                    acceptedEl.innerHTML = "<p style='font-size:13px; color:var(--text-muted); text-align:center;'>কোনো এক্সেপ্ট করা অর্ডার নেই।</p>";
+                    rejectedEl.innerHTML = "<p style='font-size:13px; color:var(--text-muted); text-align:center;'>কোনো বাতিল অর্ডার নেই।</p>";
+                    document.getElementById('totalOrderBadge').innerText = '০টি অর্ডার';
+                    return;
+                }
+
+                for (let id in data) {
+                    let o = data[id];
+                    let status = o.status || "Pending";
+                    let itemsList = o.items ? o.items.map(i => `• ${i.name} (৳${i.price})`).join('<br>') : 'তথ্য নেই';
+
+                    let cardHTML = `
+                        <div class="order-card ${status.toLowerCase()}">
+                            <div class="order-header-info">
+                                <span><b>অর্ডার আইডি:</b> ${id.slice(-6)}</span>
+                                <span class="badge badge-${status.toLowerCase()}">${status}</span>
+                            </div>
+                            <div class="order-body-info">
+                                <b>নাম:</b> ${o.name} <br>
+                                <b>ফোন:</b> <a href="tel:${o.phone}">${o.phone}</a> <br>
+                                <b>ঠিকানা:</b> ${o.address} <br>
+                                <b>পেমেন্ট:</b> ${o.paymentDetails}
+                            </div>
+                            <div class="order-items-box">
+                                <b>পণ্যসমূহ:</b><br>${itemsList}<br>
+                                <b>মোট মূল্য (ডেলিভারি সহ):</b> ৳${o.total}
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn-action bg-success" onclick="updateOrderStatus('${id}', 'Accepted')">Accept</button>
+                                <button class="btn-action bg-danger" onclick="updateOrderStatus('${id}', 'Rejected')">Reject</button>
+                                <button class="btn-action bg-secondary" onclick="deleteOrder('${id}')">Delete</button>
+                            </div>
+                        </div>
+                    `;
+
+                    if (status === "Pending") { pCount++; pendingEl.innerHTML += cardHTML; }
+                    else if (status === "Accepted" || status === "Confirmed") { aCount++; acceptedEl.innerHTML += cardHTML; }
+                    else if (status === "Rejected") { rCount++; rejectedEl.innerHTML += cardHTML; }
+                }
+
+                document.getElementById('pendingCount').innerText = pCount;
+                document.getElementById('acceptedCount').innerText = aCount;
+                document.getElementById('rejectedCount').innerText = rCount;
+                document.getElementById('totalOrderBadge').innerText = `${pCount + aCount + rCount}টি অর্ডার`;
+
+                if(pCount === 0) pendingEl.innerHTML = "<p style='font-size:13px; color:var(--text-muted); text-align:center;'>কোনো পেন্ডিং অর্ডার নেই।</p>";
+                if(aCount === 0) acceptedEl.innerHTML = "<p style='font-size:13px; color:var(--text-muted); text-align:center;'>কোনো এক্সেপ্ট করা অর্ডার নেই।</p>";
+                if(rCount === 0) rejectedEl.innerHTML = "<p style='font-size:13px; color:var(--text-muted); text-align:center;'>কোনো বাতিল অর্ডার নেই।</p>";
+            });
+        }
+
+        window.updateOrderStatus = function(orderId, newStatus) {
+            update(ref(db, 'orders/' + orderId), { status: newStatus }).then(() => {
+                alert(`অর্ডারের স্ট্যাটাস সফলভাবে "${newStatus}" করা হয়েছে!`);
+            });
+        };
+
+        window.deleteOrder = function(orderId) {
+            if(confirm("এই অর্ডারটি স্থায়ীভাবে ডিলিট করতে চান?")) {
+                remove(ref(db, 'orders/' + orderId));
+            }
+        };
+    </script>
+</body>
+</html>
